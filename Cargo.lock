@@ -5,6 +5,7 @@ dependencies = [
  "gcc 0.3.51 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "pgs-files 0.0.7 (git+https://github.com/ZeroCostGoods/pgs-files?rev=abc2d256f1135939aead0b8b9952fed5b3c0409a)",
+ "pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -55,6 +56,11 @@ source = "git+https://github.com/ZeroCostGoods/pgs-files?rev=abc2d256f1135939aea
 dependencies = [
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "pkg-config"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "regex"
