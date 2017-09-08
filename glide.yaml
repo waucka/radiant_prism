@@ -1,0 +1,23 @@
+package: github.com/waucka/radiant_prism
+import:
+- package: github.com/client9/reopen
+- package: github.com/gin-gonic/gin
+  version: ^1.2.0
+- package: github.com/go-redis/redis
+  version: ^6.6.0
+- package: github.com/lib/pq
+- package: github.com/sirupsen/logrus
+  version: ^1.0.3
+- package: github.com/urfave/cli
+  version: ^1.20.0
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+- package: gopkg.in/yaml.v2
+- package: github.com/mattes/migrate
+  version: ^3.0.1
+  subpackages:
+  - database/postgres
+- package: github.com/gin-gonic/contrib
+  subpackages:
+  - ginrus

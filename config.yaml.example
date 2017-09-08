@@ -1,0 +1,26 @@
+log_level: "debug"
+logfile_path: "stdout"
+report_awol_age: 259200
+redis:
+  network: "tcp"
+  addr: "prismredis.example.com:6379"
+  password: "bigbrother"
+  db: 0
+postgres:
+  host: "prismdb.example.com"
+  port: 5432
+  username: "postgres"
+  password: "fiveeyes"
+  dbname: "postgres"
+  sslmode: "verify-full"
+httpserver:
+  port: 443
+  cert_path: "/etc/radiant_prism_server/server.crt"
+  key_path: "/etc/radiant_prism_server/server.key"
+  cacert_path: "/etc/radiant_prism_server/ca.crt"
+  cakey_path: "/etc/radiant_prism_server/ca.key"
+  base_url: "https://prism.example.com"
+  tls: true
+  google_auth:
+    client_id: "something.apps.googleusercontent.com"
+    client_secret: "SUPER_SECRET"
