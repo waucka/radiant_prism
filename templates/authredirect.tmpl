@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Radiant Prism Console</title>
+  </head>
+  <body>
+    <div id="content">
+    Logging in...
+    <noscript>
+      <p>You must enable Javascript.</p>
+    </noscript>
+    </div>
+    <script>
+      localStorage.setItem("apikey", JSON.stringify({
+      api_key_id: "{{ .ApiKeyId }}",
+      api_key: "{{ .ApiKey }}"
+      }));
+      window.location.href = "/webui";
+    </script>
+  </body>
+</html>

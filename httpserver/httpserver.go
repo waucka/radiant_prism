@@ -67,6 +67,9 @@ var (
 type HttpServer struct {
 	privateKey interface{}
 	publicCert *x509.Certificate
+	staticFilesDir string
+	templatesDir string
+	baseURL string
 	sqlConn *sql.DB
 	redisConn *redis.Client
 	oAuthConfig *oauth2.Config
@@ -117,6 +120,9 @@ func abs(n int64) int64 {
 type HttpServerConfig struct {
 	PrivateKeyPath string
 	PublicCertPath string
+	StaticFilesDir string
+	TemplatesDir string
+	BaseURL string
 	SqlConn *sql.DB
 	RedisConn *redis.Client
 	OAuthConfig *oauth2.Config
@@ -144,6 +150,9 @@ func New(config HttpServerConfig) (*HttpServer, error) {
 	return &HttpServer{
 		privateKey: privateKey,
 		publicCert: publicCert,
+		staticFilesDir: config.StaticFilesDir,
+		templatesDir: config.TemplatesDir,
+		baseURL: config.BaseURL,
 		sqlConn: config.SqlConn,
 		redisConn: config.RedisConn,
 		oAuthConfig: config.OAuthConfig,
@@ -281,10 +290,17 @@ func (self *HttpServer) googleAuthCallback(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &AuthResult{
-		ApiKeyId: apiKeyId,
-		ApiKey: apiKey,
-	})
+	if c.GetHeader("Accept") == "application/json" {
+		c.JSON(http.StatusOK, &AuthResult{
+			ApiKeyId: apiKeyId,
+			ApiKey: apiKey,
+		})
+	} else {
+		c.HTML(http.StatusOK, "authredirect.tmpl", gin.H{
+			"ApiKeyId": apiKeyId,
+			"ApiKey": apiKey,
+		})
+	}
 }
 
 // GET /v1/Authenticate
@@ -590,11 +606,27 @@ func (self *HttpServer) v1Clients(c *gin.Context) {
 	c.String(http.StatusInternalServerError, "Not implemented")
 }
 
+func (self *HttpServer) redirectRoot(c *gin.Context) {
+	c.Redirect(http.StatusPermanentRedirect, self.baseURL + "/webui")
+}
+
+func (self *HttpServer) webUI(c *gin.Context) {
+	c.HTML(http.StatusOK, "main.tmpl", gin.H{
+		"BaseURL": self.baseURL,
+	})
+}
+
 func (self *HttpServer) setupRoutes() *gin.Engine {
 	r := gin.New()
 	r.Use(ginrus.Ginrus(log.StandardLogger(), time.RFC3339, true))
 	r.Use(gin.Recovery())
+
+	r.LoadHTMLGlob(self.templatesDir + "/*")
+
 	r.GET(GoogleAuthRedirectPath, self.googleAuthCallback)
+	r.Static("/static", self.staticFilesDir)
+	r.GET("/", self.redirectRoot)
+	r.GET("/webui", self.webUI)
 
 	v1 := r.Group("/v1")
 	v1.GET("/authenticate", self.v1Authenticate)

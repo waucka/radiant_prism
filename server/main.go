@@ -68,6 +68,8 @@ type HttpServerConfig struct {
 	KeyPath string `yaml:"key_path"`
 	CACertPath string `yaml:"cacert_path"`
 	CAKeyPath string `yaml:"cakey_path"`
+	StaticFilesDir string `yaml:"static_files_dir"`
+	TemplatesDir string `yaml:"templates_dir"`
 	BaseURL string `yaml:"base_url"`
 	TLS bool `yaml:"tls"`
 	GoogleAuth GoogleAuthConfig `yaml:"google_auth"`
@@ -364,6 +366,9 @@ func runServer(c *cli.Context) {
 	httpServer, err := httpserver.New(httpserver.HttpServerConfig{
 		PrivateKeyPath: config.HttpServer.CAKeyPath,
 		PublicCertPath: config.HttpServer.CACertPath,
+		StaticFilesDir: config.HttpServer.StaticFilesDir,
+		TemplatesDir: config.HttpServer.TemplatesDir,
+		BaseURL: config.HttpServer.BaseURL,
 		SqlConn: db,
 		RedisConn: redisConn,
 		OAuthConfig: oAuthConfig,
