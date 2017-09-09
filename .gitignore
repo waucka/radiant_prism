@@ -3,3 +3,4 @@ radiant_prism_server
 radiant_prism_client
 vendor
 html/node_modules
+html/dist/bundle.js
