@@ -39,6 +39,8 @@ import (
 	"golang.org/x/oauth2/google"
 
 	"github.com/waucka/radiant_prism/httpserver"
+	"github.com/waucka/radiant_prism/backend"
+	"github.com/waucka/radiant_prism/certmgmt"
 )
 
 type RedisConfig struct {
@@ -363,16 +365,19 @@ func runServer(c *cli.Context) {
 		Endpoint: google.Endpoint,
 	}
 
-	httpServer, err := httpserver.New(httpserver.HttpServerConfig{
-		PrivateKeyPath: config.HttpServer.CAKeyPath,
-		PublicCertPath: config.HttpServer.CACertPath,
+	certMan, err := certmgmt.NewFromPaths(config.HttpServer.CACertPath, config.HttpServer.CAKeyPath)
+
+	httpServer := httpserver.HttpServer{
 		StaticFilesDir: config.HttpServer.StaticFilesDir,
 		TemplatesDir: config.HttpServer.TemplatesDir,
 		BaseURL: config.HttpServer.BaseURL,
-		SqlConn: db,
-		RedisConn: redisConn,
-		OAuthConfig: oAuthConfig,
-	})
+		Backend: &backend.Backend{
+			SqlConn: db,
+			RedisConn: redisConn,
+			OAuthConfig: oAuthConfig,
+			CertMan: certMan,
+		},
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
