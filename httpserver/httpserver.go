@@ -124,6 +124,14 @@ func (self *HttpServer) v1Authenticate(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, self.Backend.GetAuthCodeURL(state))
 }
 
+func getBinaryHeader(r *http.Request, headerName string) ([]byte, error) {
+	headerString := r.Header.Get(headerName)
+	if headerString == "" {
+		return nil, fmt.Errorf("No such header: %s", headerName)
+	}
+
+	return base64.StdEncoding.DecodeString(headerString)
+}
 
 // POST /v1/provision
 // Body content type: application/json
@@ -155,14 +163,7 @@ func (self *HttpServer) v1Provision(c *gin.Context) {
 		return
 	}
 
-	reqSigStr := r.Header.Get("Request-Signature")
-	if reqSigStr == "" {
-		log.Errorln("No request signature")
-		c.String(http.StatusBadRequest, "No request signature")
-		return
-	}
-
-	reqSig, err := base64.StdEncoding.DecodeString(reqSigStr)
+	reqSig, err := getBinaryHeader(r, "Request-Signature")
 	if err != nil {
 		log.Errorln(err.Error())
 		c.String(http.StatusBadRequest, "Invalid request signature")
