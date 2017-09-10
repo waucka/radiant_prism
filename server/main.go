@@ -18,11 +18,14 @@ package main
 
 import (
 	"fmt"
+	"time"
+	"strconv"
+	"io/ioutil"
+	"database/sql"
+
 	"os"
 	"os/signal"
 	"syscall"
-	"io/ioutil"
-	"database/sql"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -41,6 +44,7 @@ import (
 	"github.com/waucka/radiant_prism/httpserver"
 	"github.com/waucka/radiant_prism/backend"
 	"github.com/waucka/radiant_prism/certmgmt"
+	"github.com/waucka/radiant_prism/auth"
 )
 
 type RedisConfig struct {
@@ -140,8 +144,56 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "createapikey",
+			Usage:  "Create an API key",
+			ArgsUsage: "USERNAME",
+			Action: createApiKey,
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name: "lifetime",
+					Value: 3600,
+					Usage: "Time in seconds that API key is valid",
+				},
+			},
+		},
 	}
 	app.Run(os.Args)
+}
+
+func createApiKey(c *cli.Context) {
+	config, err := loadConfig(c.Parent().String("config"))
+	if err != nil {
+		log.Fatalf("Failed to load config: %s", err)
+	}
+
+	if c.NArg() != 1 {
+		// Sure, let's repeat ourselves!  The urfave/cli API sucks.
+		cli.ShowCommandHelpAndExit(c, "createapikey", 1)
+	}
+
+	username := c.Args().Get(0)
+	lifetimeSeconds, err := strconv.ParseInt(c.String("lifetime"), 10, 32)
+	if err != nil {
+		log.Fatalf("Invalid lifetime: %s", err)
+	}
+	lifetime := time.Duration(lifetimeSeconds) * time.Second
+
+	db, err := connectPostgres(config)
+	if err != nil {
+		log.Fatalf("Failed to connect to PostgreSQL: %s", err)
+	}
+
+	redisConn, err := connectRedis(config)
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %s", err)
+	}
+
+	apiKeyId, apiKey, err := auth.CreateApiKey(db, redisConn, username, lifetime)
+	if err != nil {
+		log.Fatalf("Failed to connect to create API key: %s", err)
+	}
+	fmt.Printf("API Key ID: %s\nAPI Key   : %s\n", apiKeyId, apiKey)
 }
 
 func addUser(c *cli.Context) {
