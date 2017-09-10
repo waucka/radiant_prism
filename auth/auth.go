@@ -159,7 +159,7 @@ func CreateApiKey(sqlConn *sql.DB, redisConn *redis.Client, username string, lif
 		return "", "", err
 	}
 
-	_, err = redisConn.Set(fmt.Sprintf("apiKeys:%s", apiKeyId), permsJsonBytes, lifetime).Result()
+	_, err = redisConn.Set(fmt.Sprintf("apikeys:%s", apiKeyId), permsJsonBytes, lifetime).Result()
 	if err != nil {
 		return "", "", err
 	}
