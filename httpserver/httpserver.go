@@ -96,6 +96,10 @@ func (self *HttpServer) googleAuthCallback(c *gin.Context) {
 // Parameters:
 //   duration: time in seconds that auth token should live for (min 300, max 21600)
 func (self *HttpServer) v1Authenticate(c *gin.Context) {
+	logger := log.WithFields(log.Fields{
+		"remote_ip": c.ClientIP(),
+	})
+
 	var duration int64
 	var err error
 
@@ -116,7 +120,7 @@ func (self *HttpServer) v1Authenticate(c *gin.Context) {
 
 	state, err := self.Backend.CreateGoogleAuthState(int(duration))
 	if err != nil {
-		log.Error(err.Error())
+		logger.Error(err.Error())
 		c.String(http.StatusBadRequest, "Failed to store Google Auth state")
 		return
 	}
@@ -145,9 +149,12 @@ func getBinaryHeader(r *http.Request, headerName string) ([]byte, error) {
 //     }
 // }
 func (self *HttpServer) v1Provision(c *gin.Context) {
+	logger := log.WithFields(log.Fields{
+		"remote_ip": c.ClientIP(),
+	})
 	r := c.Request
 	if r.Body == nil {
-		log.Errorln("No body!")
+		logger.Errorln("No body!")
 		c.String(http.StatusBadRequest, "No body")
 		return
 	}
@@ -156,7 +163,7 @@ func (self *HttpServer) v1Provision(c *gin.Context) {
 	lr := &io.LimitedReader{R: r.Body, N: 1024}
 	bodyBytes, err := ioutil.ReadAll(lr)
 	if err != nil {
-		log.Errorln(err.Error())
+		logger.Errorln(err.Error())
 		// Returning anything is probably futile, since the
 		// connection probably died.  Let's try anyway!
 		c.String(http.StatusBadRequest, "Failed to read body")
@@ -165,7 +172,7 @@ func (self *HttpServer) v1Provision(c *gin.Context) {
 
 	reqSig, err := getBinaryHeader(r, "Request-Signature")
 	if err != nil {
-		log.Errorln(err.Error())
+		logger.Errorln(err.Error())
 		c.String(http.StatusBadRequest, "Invalid request signature")
 		return
 	}
@@ -173,7 +180,7 @@ func (self *HttpServer) v1Provision(c *gin.Context) {
 	apiKeyId := r.Header.Get("Prism-Api-Key-Id")
 	sigOk, userPerms, err := self.Backend.ValidateSignature(apiKeyId, bodyBytes, reqSig)
 	if err != nil {
-		log.Error(err.Error())
+		logger.Error(err.Error())
 		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid API key ID: %s (or server error)", apiKeyId))
 		return
 	}
@@ -192,26 +199,23 @@ func (self *HttpServer) v1Provision(c *gin.Context) {
 	resp, berr := self.Backend.Provision(userPerms, &provisionReq)
 	if berr != nil {
 		if berr.Underlying != nil {
-			log.WithFields(log.Fields{
-				"remote_ip": c.ClientIP(),
-			}).Infoln(berr.Underlying.Error())
+			logger.Infoln(berr.Underlying.Error())
 		}
-		log.WithFields(log.Fields{
-			"remote_ip": c.ClientIP(),
-		}).Infoln(berr.Error())
+		logger.Infoln(berr.Error())
 		c.String(berr.HttpCode(), berr.Error())
 	}
 
 	c.JSON(http.StatusOK, resp)
-	log.WithFields(log.Fields{
-		"remote_ip": c.ClientIP(),
-	}).Infof("Provisioned client: %s", provisionReq.ClientName)
+	logger.Infof("Provisioned client: %s", provisionReq.ClientName)
 }
 
 func (self *HttpServer) v1Renew(c *gin.Context) {
+	logger := log.WithFields(log.Fields{
+		"remote_ip": c.ClientIP(),
+	})
 	r := c.Request
 	if r.Body == nil {
-		log.Errorln("No CSR!")
+		logger.Errorln("No CSR!")
 		c.String(http.StatusBadRequest, "No CSR")
 		return
 	}
@@ -220,7 +224,7 @@ func (self *HttpServer) v1Renew(c *gin.Context) {
 	lr := &io.LimitedReader{R: r.Body, N: 8 * 1024}
 	bodyBytes, err := ioutil.ReadAll(lr)
 	if err != nil {
-		log.Errorln(err.Error())
+		logger.Errorln(err.Error())
 		// Returning anything is probably futile, since the
 		// connection probably died.  Let's try anyway!
 		c.String(http.StatusBadRequest, "Failed to read CSR")
@@ -229,7 +233,7 @@ func (self *HttpServer) v1Renew(c *gin.Context) {
 
 	csr, _, err := csrFromPem(bodyBytes)
 	if err != nil {
-		log.Errorln(err.Error())
+		logger.Errorln(err.Error())
 		c.String(http.StatusBadRequest, "Malformed CSR")
 		return
 	}
@@ -239,9 +243,7 @@ func (self *HttpServer) v1Renew(c *gin.Context) {
 	pemCert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: asn1Cert})
 
 	c.Data(http.StatusOK, "application/octet-stream", pemCert)
-	log.WithFields(log.Fields{
-		"remote_ip": c.ClientIP(),
-	}).Infof("Renewed certificate for client: %s", csr.Subject.CommonName)
+	logger.Infof("Renewed certificate for client: %s", csr.Subject.CommonName)
 }
 
 func (self *HttpServer) v1Clients(c *gin.Context) {
