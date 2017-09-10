@@ -1,6 +1,8 @@
 log_level: "debug"
 logfile_path: "stdout"
 report_awol_age: 259200
+cacert_path: "/etc/radiant_prism_server/ca.crt"
+cakey_path: "/etc/radiant_prism_server/ca.key"
 redis:
   network: "tcp"
   addr: "prismredis.example.com:6379"
@@ -17,8 +19,6 @@ httpserver:
   port: 443
   cert_path: "/etc/radiant_prism_server/server.crt"
   key_path: "/etc/radiant_prism_server/server.key"
-  cacert_path: "/etc/radiant_prism_server/ca.crt"
-  cakey_path: "/etc/radiant_prism_server/ca.key"
   static_files_dir: "/usr/share/radiant_prism_server/webui"
   base_url: "https://prism.example.com"
   tls: true

@@ -72,8 +72,6 @@ type HttpServerConfig struct {
 	ListenPort int `yaml:"port"`
 	CertPath string `yaml:"cert_path"`
 	KeyPath string `yaml:"key_path"`
-	CACertPath string `yaml:"cacert_path"`
-	CAKeyPath string `yaml:"cakey_path"`
 	StaticFilesDir string `yaml:"static_files_dir"`
 	TemplatesDir string `yaml:"templates_dir"`
 	BaseURL string `yaml:"base_url"`
@@ -92,6 +90,8 @@ type Config struct {
 	// Can be "stdout".
 	LogFilePath string `yaml:"logfile_path"`
 	LogLevel string `yaml:"log_level"`
+	CACertPath string `yaml:"cacert_path"`
+	CAKeyPath string `yaml:"cakey_path"`
 }
 
 func main() {
@@ -417,7 +417,7 @@ func runServer(c *cli.Context) {
 		Endpoint: google.Endpoint,
 	}
 
-	certMan, err := certmgmt.NewFromPaths(config.HttpServer.CACertPath, config.HttpServer.CAKeyPath)
+	certMan, err := certmgmt.NewFromPaths(config.CACertPath, config.CAKeyPath)
 
 	httpServer := httpserver.HttpServer{
 		StaticFilesDir: config.HttpServer.StaticFilesDir,
